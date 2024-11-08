@@ -1,4 +1,5 @@
 #pragma config(Sensor, in1,    analog1,        sensorAnalog)
+#pragma config(Sensor, dgtl1,  bumper,         sensorTouch)
 #pragma config(Sensor, dgtl10, digital10,      sensorDigitalOut)
 #pragma config(Sensor, dgtl11, digital11,      sensorDigitalOut)
 #pragma config(Sensor, dgtl12, digital12,      sensorDigitalOut)
@@ -13,6 +14,8 @@ int PD0, PD1, PD2, PD3, PD4, PD5, PD6, PD7, PD_sum;
 
 int max_val, max_no = 0;
 
+int whatTask = 0;
+
 int Expose_and_read(){
 SensorValue[digital11] = 1; // close the shutter, clear the film, and
 delay(5); // Wait for 5ms for things to settle
@@ -25,8 +28,7 @@ return intensity; // return the analog input 1
 PD_sum is a measure of the distance between the robot and the beacon. The sensing
 sensitivity is set by expose_time*/
 void ReadPD(){
-SensorValue[digital11] = 1; // close the shutter, clear the film, and
-increment the counter
+SensorValue[digital11] = 1; // close the shutter, clear the film, and increment the counter
 SensorValue[digital12] = 1; // initialize counter value to '0'
 SensorValue[digital12] = 0; // allow counter to count
 delay(5); // 5ms wait for things settling down
@@ -95,6 +97,7 @@ return limited;
 mode looking for the beacon.
 This function also calculates the speed, steering sensitivity and the heading
 direction so the robot moves to beacon*/
+int tempSum = PD_sum;
 void Move(){
 int tempSpeed = 0;
 int error = 4 - max_no;
@@ -104,13 +107,18 @@ if(PD_sum < ambient_level){ // looking for the beacon if background noise is
 speed = 0;//serach mode=>no forward motion
 steer = -spin_speed;//search mode =>spin
 }
+
 if(PD_sum > slow_level){//Beacon is near!
 speed = slow_speed;//slow down
 }
-if(SensorValue[]) //whatever the dig for the limitswitch is
-	moveArm();
-	freq = 10;
-	SensorValue[digital10] = freq;
+if(SensorValue[bumper] == 1){ //whatever the dig for the limitswitch is
+	if(whatTask == 2){
+		whatTask = 1; 
+	}else if(whatTask == 2){
+		whatTask = 1;
+	}
+	motor[port1] = 0;
+	motor[port10] = 0;
 }
 tempSpeed = limit_pwm(steer + speed);
 motor[port1] = tempSpeed; // right, port 1
@@ -129,45 +137,12 @@ slow_speed = 25;//slow speed , used in move
 spin_speed = 50;//spin speed (for searching mode),used in move
 SensorValue[digital10] = freq;// turn to 1KHz(red beacon)
 while(true){
-if(freq == 1){
+if(whatTask == 0){ //searching for the robot
 	ReadPD();
   Find_max();
 	Move();
-}else if(freq == 10){
-	ReadPD();
-	Find_max();
-	moveToGreen();
+}else if(whatTask == 1){
 	
-}	
-}
-}
-
-void moveToGreen(){
-	int tempSpeed = 0;
-	int error = 4 - max_no;
-	int steer = error * steer_sensitivity;
-	int speed = forward_speed;//forward speed (normal speed)
-	if(PD_sum < ambient_level){ // looking for the beacon if background noise is
-		speed = 0;//serach mode=>no forward motion
-		steer = -spin_speed;//search mode =>spin
 	}
-	if(PD_sum > slow_level){//Beacon is near!
-		speed = slow_speed;//slow down
-	}
-	if(stop statement here){
-		
-	}
-	tempSpeed = limit_pwm(steer + speed);
-	motor[port1] = tempSpeed; // left, port 1
-	tempSpeed = limit_pwm(steer - speed);
-	motor[port10] = tempSpeed; // right, port 10
-}
-
-void moveArm(bool redORGreen){ //false == red true == green
-	if(redOrGreen == false){
-		//need the motor for the arm
-		
-	}else{
-		
 }
 }
